@@ -50,32 +50,6 @@ fun englishDictionary(wordLength: Int): List<String> =
 fun danishDictionary(wordLength: Int): List<String> =
     dictionary("DanishDictionary.txt", wordLength)
 
-fun anagrams(
-    dictionary: Collection<String>,
-    includingLetters: Set<Char>,
-    positionToLetters: Map<Int, List<Char>>,
-    totalLength: Int,
-): Set<String> {
-    val stack = Stack<Pair<Int, String>>()
-    stack.add((0 to ""))
-    val words = HashSet<String>()
-    while (stack.isNotEmpty()) {
-        val (position, intermediateWord) = stack.pop()
-        if (totalLength <= position) {
-            if (intermediateWord in dictionary && includingLetters.fold(true) { acc, letter -> acc && letter in intermediateWord }) {
-                words.add(intermediateWord)
-            }
-            continue
-        }
-
-        val letters = positionToLetters[position]!!
-        for (letter in letters) {
-            stack.add((position + 1 to (intermediateWord + letter)))
-        }
-    }
-    return words
-}
-
 fun occurringLetters(alphabet: Iterable<Char>, words: Collection<String>): HashMap<Char, Int> {
     val letterToOccurrences = HashMap<Char, Int>()
     for (letter in alphabet) {
@@ -164,7 +138,12 @@ fun wordleSolver(
         }
 
         if (1 < tries) {
-            modifiableDictionary = anagrams(modifiableDictionary, includingLetters, positionToLetters, wordLength)
+            modifiableDictionary = modifiableDictionary.filter { word ->
+                positionToLetter.all { (position, letter) -> letter == word[position] } &&
+                        word.indices.all { index -> word[index] in positionToLetters[index]!! } &&
+                        includingLetters.all { letter -> letter in word } &&
+                        excludingLetters.all { letter -> letter !in word }
+            }.toSet()
         }
 
         val suggestion = when (playStyle) {
