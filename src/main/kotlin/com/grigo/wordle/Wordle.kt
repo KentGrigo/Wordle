@@ -97,7 +97,7 @@ fun wordleSolver(
     givenTargetWord: String? = null,
 ) {
     val stopWatch = StopWatch.start()
-    val scanner = Scanner(System.`in`, Charsets.ISO_8859_1)
+    val scanner = Scanner(System.`in`, Charsets.ISO_8859_1.name())
 
     var modifiableDictionary = dictionary.toSet()
     val letters = alphabet.toMutableList()
