@@ -49,6 +49,7 @@ fun englishDictionary(wordLength: Int): List<String> =
 
 fun danishDictionary(wordLength: Int): List<String> =
     dictionary("DanishDictionary.txt", wordLength)
+        .filter { word -> 'é' !in word }
 
 fun occurringLetters(alphabet: Iterable<Char>, words: Collection<String>): HashMap<Char, Int> {
     val letterToOccurrences = HashMap<Char, Int>()
