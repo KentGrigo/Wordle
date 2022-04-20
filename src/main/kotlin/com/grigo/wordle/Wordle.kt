@@ -8,13 +8,11 @@ import kotlin.collections.set
 
 fun main() {
     val wordLength = 5
-    val dictionary = englishDictionary(wordLength)
-    // val dictionary = danishDictionary(wordLength)
-    val alphabet = alphabet(dictionary)
+    val language = Danish()
 
     val stopWatch = StopWatch.start()
     for (testNumber in 0 until 1000) {
-        wordleSolver(dictionary, alphabet, wordLength, PlayStyle.SOLVE_LOCAL, false, null)
+        wordleSolver(language, wordLength, PlayStyle.SOLVE_LOCAL, false, null)
     }
     val totalTime = stopWatch.stop()
     println("Total time: $totalTime")
@@ -26,30 +24,6 @@ enum class PlayStyle {
     PLAY_EXTERNAL,
     SOLVE_EXTERNAL,
 }
-
-fun alphabet(dictionary: List<String>): Set<Char> =
-    dictionary.toSet().map { it.toSet() }.flatten().toSet()
-
-fun dictionary(fileName: String, wordLength: Int): List<String> {
-    val dictionary = resourceAsText("/dictionaries/$fileName")
-    return dictionary
-        .filter { it.length == wordLength }
-        .filter { it == it.lowercase() }
-}
-
-fun resourceAsText(path: String): List<String> =
-    object {}.javaClass
-        .getResource(path)
-        ?.readText(Charsets.ISO_8859_1)
-        ?.split("\n")
-        ?: throw Exception("The resource at $path was not found")
-
-fun englishDictionary(wordLength: Int): List<String> =
-    dictionary("EnglishDictionary.txt", wordLength)
-
-fun danishDictionary(wordLength: Int): List<String> =
-    dictionary("DanishDictionary.txt", wordLength)
-        .filter { word -> 'é' !in word }
 
 fun occurringLetters(alphabet: Iterable<Char>, words: Collection<String>): HashMap<Char, Int> {
     val letterToOccurrences = HashMap<Char, Int>()
@@ -80,7 +54,7 @@ fun mostRepresentingWord(words: Collection<String>, letterToOccurrences: Map<Cha
     return bestWord
 }
 
-fun pickTargetWord(playStyle: PlayStyle, dictionary: List<String>): String? {
+fun pickTargetWord(playStyle: PlayStyle, dictionary: Collection<String>): String? {
     return when (playStyle) {
         PlayStyle.PLAY_LOCAL -> dictionary.random()
         PlayStyle.SOLVE_LOCAL -> dictionary.random()
@@ -90,18 +64,17 @@ fun pickTargetWord(playStyle: PlayStyle, dictionary: List<String>): String? {
 }
 
 fun wordleSolver(
-    dictionary: List<String>,
-    alphabet: Set<Char>,
+    language: Language,
     wordLength: Int,
     playStyle: PlayStyle,
     isLogging: Boolean = false,
     givenTargetWord: String? = null,
-) {
+): Int {
     val stopWatch = StopWatch.start()
     val scanner = Scanner(System.`in`, Charsets.ISO_8859_1.name())
 
-    var modifiableDictionary = dictionary.toSet()
-    val letters = alphabet.toMutableList()
+    var modifiableDictionary = language.dictionary.filter { it.length == wordLength }.toSet()
+    val letters = language.alphabet.toMutableList()
     val includingLetters = HashSet<Char>()
     val excludingLetters = HashSet<Char>()
     val positionToLetter = HashMap<Int, Char>()
@@ -112,7 +85,7 @@ fun wordleSolver(
         positionToLetters[index] = positionedLetters
     }
 
-    val targetWord = givenTargetWord ?: pickTargetWord(playStyle, dictionary)
+    val targetWord = givenTargetWord ?: pickTargetWord(playStyle, modifiableDictionary)
     if (isLogging) {
         if (targetWord == null) {
             println("Target word is unknown")
@@ -153,7 +126,7 @@ fun wordleSolver(
                 while (true) {
                     print("Suggestion> ")
                     suggestion = scanner.next()
-                    if (suggestion in dictionary) {
+                    if (suggestion in language.dictionary) {
                         break
                     }
                 }
@@ -161,7 +134,7 @@ fun wordleSolver(
                 suggestion
             }
             PlayStyle.SOLVE_LOCAL, PlayStyle.SOLVE_EXTERNAL -> {
-                val letterToOccurrences = occurringLetters(alphabet, modifiableDictionary)
+                val letterToOccurrences = occurringLetters(language.alphabet, modifiableDictionary)
                 val suggestion = mostRepresentingWord(modifiableDictionary, letterToOccurrences)
                 if (isLogging) {
                     println("Suggestion: $suggestion")
@@ -235,4 +208,5 @@ fun wordleSolver(
             break
         }
     }
+    return tries
 }
