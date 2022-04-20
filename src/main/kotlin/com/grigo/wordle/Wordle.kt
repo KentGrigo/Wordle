@@ -2,8 +2,6 @@ package com.grigo.wordle
 
 import io.github.resilience4j.core.StopWatch
 import java.util.*
-import kotlin.collections.component1
-import kotlin.collections.component2
 import kotlin.collections.set
 
 fun main() {
@@ -73,19 +71,9 @@ fun wordleSolver(
     val stopWatch = StopWatch.start()
     val scanner = Scanner(System.`in`, Charsets.ISO_8859_1.name())
 
-    var modifiableDictionary = language.dictionary.filter { it.length == wordLength }.toSet()
-    val letters = language.alphabet.toMutableList()
-    val includingLetters = HashSet<Char>()
-    val excludingLetters = HashSet<Char>()
-    val positionToLetter = HashMap<Int, Char>()
-    val positionToLetters = HashMap<Int, ArrayList<Char>>()
-    for (index in 0 until wordLength) {
-        val positionedLetters = ArrayList<Char>()
-        positionedLetters.addAll(letters)
-        positionToLetters[index] = positionedLetters
-    }
+    val knowledge = Knowledge(wordLength, language)
 
-    val targetWord = givenTargetWord ?: pickTargetWord(playStyle, modifiableDictionary)
+    val targetWord = givenTargetWord ?: pickTargetWord(playStyle, knowledge.modifiableDictionary)
     if (isLogging) {
         if (targetWord == null) {
             println("Target word is unknown")
@@ -102,22 +90,7 @@ fun wordleSolver(
         if (isLogging) {
             println("Tries: $tries")
             println("Target: $targetWord")
-            println(letters.sorted())
-            println(includingLetters.toMutableList().sorted())
-            println(excludingLetters.toMutableList().sorted())
-            println(positionToLetter)
-            for ((index, chars) in positionToLetters) {
-                println("$index: ${chars.sorted()}")
-            }
-        }
-
-        if (1 < tries) {
-            modifiableDictionary = modifiableDictionary.filter { word ->
-                positionToLetter.all { (position, letter) -> letter == word[position] } &&
-                        word.indices.all { index -> word[index] in positionToLetters[index]!! } &&
-                        includingLetters.all { letter -> letter in word } &&
-                        excludingLetters.all { letter -> letter !in word }
-            }.toSet()
+            knowledge.print()
         }
 
         val suggestion = when (playStyle) {
@@ -134,8 +107,8 @@ fun wordleSolver(
                 suggestion
             }
             PlayStyle.SOLVE_LOCAL, PlayStyle.SOLVE_EXTERNAL -> {
-                val letterToOccurrences = occurringLetters(language.alphabet, modifiableDictionary)
-                val suggestion = mostRepresentingWord(modifiableDictionary, letterToOccurrences)
+                val letterToOccurrences = occurringLetters(language.alphabet, knowledge.modifiableDictionary)
+                val suggestion = mostRepresentingWord(knowledge.modifiableDictionary, letterToOccurrences)
                 if (isLogging) {
                     println("Suggestion: $suggestion")
                     println()
@@ -165,37 +138,7 @@ fun wordleSolver(
             colors
         }
 
-        val badLetters = HashSet<Char>()
-        val goodLetters = HashSet<Char>()
-        for ((letter, color) in suggestion.zip(colors)) {
-            if (color == 'G') {
-                badLetters.add(letter)
-            } else {
-                goodLetters.add(letter)
-            }
-        }
-        letters.removeAll(badLetters)
-        includingLetters.addAll(goodLetters)
-        excludingLetters.addAll(badLetters)
-        for (index in 0 until wordLength) {
-            positionToLetters[index]!!.removeAll(badLetters)
-        }
-        for ((index, letterAndColor) in suggestion.zip(colors).withIndex()) {
-            val (letter, color) = letterAndColor
-            if (color == 'E') {
-                positionToLetters[index] = arrayListOf(letter)
-            } else {
-                positionToLetters[index]!!.remove(letter)
-            }
-        }
-
-        for (index in 0 until wordLength) {
-            val color = colors[index]
-            val letter = suggestion[index]
-            if (color == 'E') {
-                positionToLetter[index] = letter
-            }
-        }
+        knowledge.update(suggestion, colors)
 
         val status = if (colors.all { it == 'E' }) {
             "SUCCESS"
