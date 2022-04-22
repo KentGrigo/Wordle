@@ -24,10 +24,8 @@ enum class PlayStyle {
 
 fun pickTargetWord(playStyle: PlayStyle, dictionary: Collection<String>): String? {
     return when (playStyle) {
-        PlayStyle.PLAY_LOCAL -> dictionary.random()
-        PlayStyle.SOLVE_LOCAL -> dictionary.random()
-        PlayStyle.SOLVE_EXTERNAL -> null
-        PlayStyle.PLAY_EXTERNAL -> null
+        PlayStyle.PLAY_LOCAL, PlayStyle.SOLVE_LOCAL -> dictionary.random()
+        PlayStyle.SOLVE_EXTERNAL, PlayStyle.PLAY_EXTERNAL -> null
     }
 }
 
@@ -66,12 +64,8 @@ fun wordleSolver(
         }
 
         val suggestion = when (playStyle) {
-            PlayStyle.PLAY_LOCAL, PlayStyle.PLAY_EXTERNAL -> {
-                player.getSuggestion()
-            }
-            PlayStyle.SOLVE_LOCAL, PlayStyle.SOLVE_EXTERNAL -> {
-                solver.getSuggestion()
-            }
+            PlayStyle.PLAY_LOCAL, PlayStyle.PLAY_EXTERNAL -> player.getSuggestion()
+            PlayStyle.SOLVE_LOCAL, PlayStyle.SOLVE_EXTERNAL -> solver.getSuggestion()
         }
         if (isLogging) {
             println("Suggestion: $suggestion")
