@@ -79,11 +79,11 @@ fun wordleSolver(
             var colors = ""
             for ((suggestionLetter, targetLetter) in suggestion.zip(targetWord)) {
                 colors += if (suggestionLetter == targetLetter) {
-                    'E'
+                    'G'
                 } else if (suggestionLetter in targetWord) { // TODO: Check duplicates
                     'Y'
                 } else {
-                    'G'
+                    'W'
                 }
             }
             if (playStyle == PlayStyle.PLAY_LOCAL) {
@@ -95,7 +95,7 @@ fun wordleSolver(
 
         knowledge.update(suggestion, colors)
 
-        val status = if (colors.all { it == 'E' }) {
+        val status = if (colors.all { it == 'G' }) {
             "SUCCESS"
         } else {
             null
