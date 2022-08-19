@@ -15,6 +15,31 @@ fun main() {
     println("Total time: $totalTime")
 }
 
+fun mainTestAllWords() {
+    val wordLength = 5
+    val language = English()
+
+    val stopWatch = StopWatch.start()
+    val difficultWords = ArrayList<String>()
+    var mostDifficultWord = language.dictionary.first()
+    var maxNumberOfTries = 0
+    language.dictionary.forEach { word ->
+        val numberOfTries = wordleSolver(language, wordLength, PlayStyle.SOLVE_LOCAL, false, word)
+        if (6 < numberOfTries) {
+            difficultWords.add(word)
+        }
+        if (maxNumberOfTries < numberOfTries) {
+            maxNumberOfTries = numberOfTries
+            mostDifficultWord = word
+        }
+    }
+    println("There are ${difficultWords.size} words that take more than 6 guesses. They are: $difficultWords")
+    println("Most difficult word is $mostDifficultWord, needing $maxNumberOfTries tries to guess")
+
+    val totalTime = stopWatch.stop()
+    println("Total time: $totalTime")
+}
+
 enum class PlayStyle {
     PLAY_LOCAL,
     SOLVE_LOCAL,
