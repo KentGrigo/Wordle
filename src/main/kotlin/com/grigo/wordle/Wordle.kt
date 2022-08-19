@@ -73,8 +73,17 @@ fun wordleSolver(
         }
 
         val colors = if (targetWord == null) {
-            print("Colors> ")
-            scanner.next()
+            var feedback: String
+            while (true) {
+                print("Colors> ")
+                feedback = scanner.next()
+                val isCorrectLength = feedback.length == 5
+                val containsAllowedCharacters = feedback.toSet().minus(listOf("GYW")).isNotEmpty()
+                if (isCorrectLength && containsAllowedCharacters) {
+                    break
+                }
+            }
+            feedback
         } else {
             var colors = ""
             for ((suggestionLetter, targetLetter) in suggestion.zip(targetWord)) {
